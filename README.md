@@ -1,5 +1,8 @@
 [![Build Status](https://travis-ci.com/pulp-platform/riscv.svg?branch=master)](https://travis-ci.com/pulp-platform/riscv)
 
+# Changelog 
+This repo is forked from [CV32E40P](https://github.com/openhwgroup/cv32e40p)
+To enable tapeout, we integrate AXI adapter and debug interface in this repo
 # OpenHW Group CORE-V CV32E40P RISC-V IP
 
 CV32E40P is a small and efficient, 32-bit, in-order RISC-V core with a 4-stage pipeline that implements
