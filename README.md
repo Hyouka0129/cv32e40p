@@ -1,7 +1,8 @@
 [![Build Status](https://travis-ci.com/pulp-platform/riscv.svg?branch=master)](https://travis-ci.com/pulp-platform/riscv)
 
 # Changelog 
-This repo is forked from [CV32E40P](https://github.com/openhwgroup/cv32e40p)
+This repo is forked from [CV32E40P](https://github.com/openhwgroup/cv32e40p).
+
 To enable tapeout, we integrate AXI adapter and debug interface in this repo
 # OpenHW Group CORE-V CV32E40P RISC-V IP
 
