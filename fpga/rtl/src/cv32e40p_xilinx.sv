@@ -3,8 +3,78 @@ module cv32e40p_xilinx (
     input   rst_ni
 );
     
+    AXI_BUS #(
+        .AXI_ADDR_WIDTH ( 32    ),
+        .AXI_DATA_WIDTH ( 32    ),
+        .AXI_ID_WIDTH   ( 1     ),
+        .AXI_USER_WIDTH ( 1     )
+    ) slave[1:0]();
+
+    AXI_BUS #(
+        .AXI_ADDR_WIDTH ( 32    ),
+        .AXI_DATA_WIDTH ( 32    ),
+        .AXI_ID_WIDTH   ( 1     ),
+        .AXI_USER_WIDTH ( 1     )
+    ) master[1:0]();
     
-    
+    localparam axi_pkg::xbar_cfg_t AXI_XBAR_CFG = '{
+        NoSlvPorts:         2,
+        NoMstPorts:         2,
+        MaxMstTrans:        1, // Probably requires update
+        MaxSlvTrans:        1, // Probably requires update
+        FallThrough:        1'b0,
+        LatencyMode:        axi_pkg::CUT_ALL_PORTS,
+        AxiIdWidthSlvPorts: 1,
+        AxiIdUsedSlvPorts:  1,
+        UniqueIds:          1'b0,
+        AxiAddrWidth:       32,
+        AxiDataWidth:       32,
+        NoAddrRules:        2
+    };
+
+    axi_pkg::xbar_rule_32_t [1:0] addr_map;
+
+    localparam idx_rom      = 0;
+    localparam idx_sram     = 1;
+    localparam rom_base     = 32'h00010000;
+    localparam rom_length   = 32'h00010000;
+    localparam sram_base    = 32'h10000000;
+    localparam sram_length  = 32'h10000000;
+
+    assign addr_map = '{
+        '{ idx: idx_rom,       start_addr: rom_base,        end_addr: rom_base + rom_length   },
+        '{ idx: idx_sram,      start_addr: sram_base,       end_addr: sram_base + sram_length }
+    };
+
+    axi_xbar_intf #(
+        .AXI_USER_WIDTH ( 1                         ),
+        .Cfg            ( AXI_XBAR_CFG              ),
+        .rule_t         ( axi_pkg::xbar_rule_32_t   )
+    ) i_axi_xbar (
+        .clk_i                 ( clk_i      ),
+        .rst_ni                ( rst_ni     ),
+        .test_i                ( 1'b0       ),
+        .slv_ports             ( slave      ),
+        .mst_ports             ( master     ),
+        .addr_map_i            ( addr_map   ),
+        .en_default_mst_port_i ( '0         ),
+        .default_mst_port_i    ( '0         )
+    );
+
+    logic           instr_req;
+    logic           instr_gnt;
+    logic           instr_rvalid;
+    logic [31:0]    instr_addr;
+    logic [31:0]    instr_rdata;
+    logic           data_req;
+    logic           data_gnt;
+    logic           data_rvalid;
+    logic           data_we;
+    logic [3:0]     data_be;
+    logic [31:0]    data_addr;
+    logic [31:0]    data_wdata;
+    logic [31:0]    data_rdata;
+
     cv32e40p_top #(
         .COREV_PULP(0),
         .COREV_CLUSTER(0),
@@ -14,37 +84,92 @@ module cv32e40p_xilinx (
         .ZFINX(0),
         .NUM_MHPMCOUNTERS(0) 
     )   i_ri5cy (
-        .clk_i(clk_i),
-        .rst_ni(rst_ni),
-        .pulp_clock_en_i('0),
-        .scan_cg_en_i('0),
-        .boot_addr_i(32'b00010000),
-        .mtvec_addr_i(32'b00000000),
-        .dm_halt_addr_i(32'b00000000),
-        .hart_id_i('0),
-        .dm_exception_addr_i(32'b00000000),
-        .instr_req_o(instr_req_o),
-        .instr_gnt_i(instr_gnt_i),
-        .instr_rvalid_i(instr_rvalid_i),
-        .instr_addr_o(instr_addr_o),
-        .instr_rdata_i(instr_rdata_i),
-        .data_req_o(data_req_o),
-        .data_gnt_i(data_gnt_i),
-        .data_rvalid_i(data_rvalid_i),
-        .data_we_o(data_we_o),
-        .data_be_o(data_be_o),
-        .data_addr_o(data_addr_o),
-        .data_wdata_o(data_wdata_o),
-        .data_rdata_i(data_rdata_i),
-        .irq_i(irq_i),
-        .irq_ack_o(irq_ack_o),
-        .irq_id_o(irq_id_o),
-        .debug_req_i(debug_req_i),
-        .debug_havereset_o(debug_havereset_o),
-        .debug_running_o(debug_running_o),
-        .debug_halted_o(debug_halted_o),
-        .fetch_enable_i(fetch_enable_i),
-        .core_sleep_o(core_sleep_o)
+        .clk_i                  (clk_i          ),
+        .rst_ni                 (rst_ni         ),
+        .pulp_clock_en_i        ('0             ),
+        .scan_cg_en_i           ('0             ),
+        .boot_addr_i            (32'b00010000   ),
+        .mtvec_addr_i           (32'b00000000   ),
+        .dm_halt_addr_i         (32'b00000000   ),
+        .hart_id_i              ('0             ),
+        .dm_exception_addr_i    (32'b00000000   ),
+        .instr_req_o            (instr_req      ),
+        .instr_gnt_i            (instr_gnt      ),
+        .instr_rvalid_i         (instr_rvalid   ),
+        .instr_addr_o           (instr_addr     ),
+        .instr_rdata_i          (instr_rdata    ),
+        .data_req_o             (data_req       ),
+        .data_gnt_i             (data_gnt       ),
+        .data_rvalid_i          (data_rvalid    ),
+        .data_we_o              (data_we        ),
+        .data_be_o              (data_be        ),
+        .data_addr_o            (data_addr      ),
+        .data_wdata_o           (data_wdata     ),
+        .data_rdata_i           (data_rdata     ),
+        .irq_i                  (32'b0          ),
+        .irq_ack_o              (               ),
+        .irq_id_o               (               ),
+        .debug_req_i            (1'b0           ),
+        .debug_havereset_o      (               ),
+        .debug_running_o        (               ),
+        .debug_halted_o         (               ),
+        .fetch_enable_i         (1'b1           ),
+        .core_sleep_o           (               )
+    );
+
+    `AXI_TYPEDEF_ALL(axi        ,
+                logic [31:0]    ,
+                logic           ,
+                logic [31:0]    ,
+                logic [3:0]     ,
+                logic           )
+
+    axi_req_t   instr_req;
+    axi_resp_t  instr_resp;
+
+    `AXI_ASSIGN_FROM_REQ(slave[0],instr_req)
+    `AXI_ASSIGN_TO_RESP(instr_resp,slave[0])
+
+    obi_axi_adapter #(
+        .axi_req_t  (axi_req_t  ),
+        .axi_resp_t (axi_resp_t ),
+        .DATA_WIDTH (32         ),
+        .ADDR_WIDTH (32         )
+    ) i_obi_axi_adapter_instr (
+        .obi_req_i      (instr_req      ),
+        .obi_gnt_o      (instr_gnt      ),
+        .obi_rvalid_o   (instr_rvalid   ),
+        .obi_we_i       (1'b0           ),
+        .obi_be_i       (4'b1111        ),
+        .obi_addr_i     (instr_addr     ),
+        .obi_wdata_i    ('0             ),
+        .obi_rdata_o    (instr_rdata    ),
+        .axi_req_o      (instr_req      ),
+        .axi_resp_i     (instr_resp     )
+    );
+
+    axi_req_t   data_req;
+    axi_resp_t  data_resp;
+
+    `AXI_ASSIGN_FROM_REQ(slave[1],data_req)
+    `AXI_ASSIGN_TO_RESP(data_resp,slave[1])
+
+    obi_axi_adapter #(
+        .axi_req_t  (axi_req_t  ),
+        .axi_resp_t (axi_resp_t ),
+        .DATA_WIDTH (32         ),
+        .ADDR_WIDTH (32         )
+    ) i_obi_axi_adapter_data (
+        .obi_req_i      (data_req      ),
+        .obi_gnt_o      (data_gnt      ),
+        .obi_rvalid_o   (data_rvalid   ),
+        .obi_we_i       (data_we       ),
+        .obi_be_i       (data_be       ),
+        .obi_addr_i     (data_addr     ),
+        .obi_wdata_i    (data_wdata    ),
+        .obi_rdata_o    (data_rdata    ),
+        .axi_req_o      (data_req      ),
+        .axi_resp_i     (data_resp     )
     );
 
 endmodule
