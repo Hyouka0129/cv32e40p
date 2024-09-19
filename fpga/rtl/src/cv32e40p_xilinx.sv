@@ -41,7 +41,7 @@ module cv32e40p_xilinx (
     localparam idx_sram     = 1;
     localparam rom_base     = 32'h00010000;
     localparam rom_length   = 32'h00010000;
-    localparam sram_base    = 32'h10000000;
+    localparam sram_base    = 32'h80000000;
     localparam sram_length  = 32'h10000000;
 
     assign addr_map = '{
@@ -91,11 +91,11 @@ module cv32e40p_xilinx (
         .rst_ni                 (rst_ni         ),
         .pulp_clock_en_i        ('0             ),
         .scan_cg_en_i           ('0             ),
-        .boot_addr_i            (32'b00010000   ),
-        .mtvec_addr_i           (32'b00010000   ),
-        .dm_halt_addr_i         (32'b00010000   ),
+        .boot_addr_i            (32'h00010000   ),
+        .mtvec_addr_i           (32'h00010000   ),
+        .dm_halt_addr_i         (32'h00010000   ),
         .hart_id_i              ('0             ),
-        .dm_exception_addr_i    (32'b00010000   ),
+        .dm_exception_addr_i    (32'h00010000   ),
         .instr_req_o            (instr_req      ),
         .instr_gnt_i            (instr_gnt      ),
         .instr_rvalid_i         (instr_rvalid   ),
