@@ -26,8 +26,8 @@ module obi_axi_adapter #(
 );
     logic [2:0] a_size;
     
-    always_comb begin : a_size
-        a_size = 3'b010
+    always_comb begin : generate_a_size
+        a_size = 3'b010;
         case (DATA_WIDTH)
             8:    a_size = 3'b000;
             16:   a_size = 3'b001;
@@ -43,7 +43,7 @@ module obi_axi_adapter #(
 
     logic obi_gnt;
 
-    always_comb begin : obi_gnt
+    always_comb begin : generate_obi_gnt
         obi_gnt = 1'b1;
         if(axi_req_o.aw_valid && !axi_resp_i.aw_ready) begin
             obi_gnt = 1'b0;

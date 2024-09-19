@@ -1,3 +1,6 @@
+`include "axi/typedef.svh"
+`include "axi/assign.svh"
+
 module cv32e40p_xilinx (
     input   clk_i,
     input   rst_ni
@@ -124,11 +127,11 @@ module cv32e40p_xilinx (
                 logic [3:0]     ,
                 logic           )
 
-    axi_req_t   instr_req;
-    axi_resp_t  instr_resp;
+    axi_req_t   instr_axi_req;
+    axi_resp_t  instr_axi_resp;
 
-    `AXI_ASSIGN_FROM_REQ(slave[0],instr_req)
-    `AXI_ASSIGN_TO_RESP(instr_resp,slave[0])
+    `AXI_ASSIGN_FROM_REQ(slave[0],instr_axi_req)
+    `AXI_ASSIGN_TO_RESP(instr_axi_resp,slave[0])
 
     obi_axi_adapter #(
         .axi_req_t  (axi_req_t  ),
@@ -144,15 +147,15 @@ module cv32e40p_xilinx (
         .obi_addr_i     (instr_addr     ),
         .obi_wdata_i    ('0             ),
         .obi_rdata_o    (instr_rdata    ),
-        .axi_req_o      (instr_req      ),
-        .axi_resp_i     (instr_resp     )
+        .axi_req_o      (instr_axi_req  ),
+        .axi_resp_i     (instr_axi_resp )
     );
 
-    axi_req_t   data_req;
-    axi_resp_t  data_resp;
+    axi_req_t   data_axi_req;
+    axi_resp_t  data_axi_resp;
 
-    `AXI_ASSIGN_FROM_REQ(slave[1],data_req)
-    `AXI_ASSIGN_TO_RESP(data_resp,slave[1])
+    `AXI_ASSIGN_FROM_REQ(slave[1],data_axi_req)
+    `AXI_ASSIGN_TO_RESP(data_axi_resp,slave[1])
 
     obi_axi_adapter #(
         .axi_req_t  (axi_req_t  ),
@@ -168,8 +171,78 @@ module cv32e40p_xilinx (
         .obi_addr_i     (data_addr     ),
         .obi_wdata_i    (data_wdata    ),
         .obi_rdata_o    (data_rdata    ),
-        .axi_req_o      (data_req      ),
-        .axi_resp_i     (data_resp     )
+        .axi_req_o      (data_axi_req  ),
+        .axi_resp_i     (data_axi_resp )
     );
 
+    logic           rom_req;
+    logic [31:0]    rom_addr;
+    logic [31:0]    rom_rdata;
+    
+
+    bootrom i_bootrom (
+        .clk_i   ( clk_i            ),
+        .req_i   ( rom_req          ),
+        .addr_i  ( rom_addr         ),
+        .rdata_o ( rom_rdata        )
+    );
+
+    axi2mem #(
+        .AXI_ID_WIDTH   ( 1     ),
+        .AXI_ADDR_WIDTH ( 32    ),
+        .AXI_DATA_WIDTH ( 32    ),
+        .AXI_USER_WIDTH ( 1     )
+    ) i_axi2rom (
+        .clk_i  ( clk_i             ),
+        .rst_ni ( rst_ni            ),
+        .slave  ( master[idx_rom]   ),
+        .req_o  ( rom_req           ),
+        .we_o   (                   ),
+        .addr_o ( rom_addr          ),
+        .be_o   (                   ),
+        .data_o (                   ),
+        .data_i ( rom_rdata         )
+    );
+
+    logic           sram_req;
+    logic           sram_we;
+    logic [31:0]    sram_addr;
+    logic [31:0]    sram_wdata;
+    logic [3:0]     sram_be;
+    logic [31:0]    sram_rdata;
+
+    sram #(
+        .DATA_WIDTH ( 32        ),
+        .USER_EN    ( 0			),
+        .SIM_INIT	( "zeros"	),
+        .NUM_WORDS	( 1024	    )
+    ) i_sram (
+        .clk_i		( clk_i 	        ),
+        .rst_ni		( rst_ni            ),
+        .req_i		( sram_req		    ),
+        .we_i	    ( sram_we		    ),
+        .addr_i		( sram_addr[15:6]   ),
+        .wuser_i	( '0		        ),
+        .wdata_i	( sram_wdata		),
+        .be_i		( sram_be		    ),
+        .ruser_o	( 		            ),
+        .rdata_o	( sram_rdata	  	)
+    );
+
+    axi2mem #(
+        .AXI_ID_WIDTH   ( 1     ),
+        .AXI_ADDR_WIDTH ( 32    ),
+        .AXI_DATA_WIDTH ( 32    ),
+        .AXI_USER_WIDTH ( 1     )
+    ) i_axi2sram (
+        .clk_i  ( clk_i             ),
+        .rst_ni ( rst_ni            ),
+        .slave  ( master[idx_sram]  ),
+        .req_o  ( sram_req          ),
+        .we_o   ( sram_we           ),
+        .addr_o ( sram_addr         ),
+        .be_o   ( sram_be           ),
+        .data_o ( sram_wdata        ),
+        .data_i ( rom_rdata         )
+    );
 endmodule

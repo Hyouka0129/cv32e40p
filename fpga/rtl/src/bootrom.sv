@@ -30,7 +30,7 @@ module bootrom (
         32'h0002ac23,
         32'h0202a023,
         32'h0202a423,
-        32'h00028067,
+        32'h00028067
     };
 
     logic [$clog2(RomSize)-1:0] addr_q;

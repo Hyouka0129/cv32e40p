@@ -21,7 +21,6 @@
 /home/hyouka/project/2025tapeout/cv32e40p/rtl/cv32e40p_alu.sv
 /home/hyouka/project/2025tapeout/cv32e40p/rtl/cv32e40p_mult.sv
 /home/hyouka/project/2025tapeout/cv32e40p/rtl/cv32e40p_ex_stage.sv
-/home/hyouka/project/2025tapeout/cv32e40p/rtl/cv32e40p_obi_interface.sv
 /home/hyouka/project/2025tapeout/cv32e40p/rtl/cv32e40p_load_store_unit.sv
 /home/hyouka/project/2025tapeout/cv32e40p/rtl/cv32e40p_cs_registers.sv
 /home/hyouka/project/2025tapeout/cv32e40p/rtl/cv32e40p_core.sv
