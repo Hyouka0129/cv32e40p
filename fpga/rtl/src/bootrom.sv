@@ -17,7 +17,7 @@
 module bootrom (
    input  logic         clk_i,
    input  logic         req_i,
-   input  logic [31:0]  addr_i,
+   input  logic [15:0]  addr_i,
    output logic [31:0]  rdata_o
 );
     localparam int RomSize = 16;
@@ -31,13 +31,13 @@ module bootrom (
         32'h00000000,
         32'h00000000,
         32'h00000000,       
+        32'h00000000,
+        32'h00000000,
         32'h00028067,
-        32'h0202a423,
-        32'h0202a023,
-        32'h0002ac23,
-        32'h0002a823,
-        32'h0002a423,
-        32'h0002a023,
+        32'h0062a223,
+        32'h10030313,
+        32'h0062a023,
+        32'h10000313,
         32'h800002b7
     };
 
@@ -45,7 +45,7 @@ module bootrom (
 
     always_ff @(posedge clk_i) begin
         if (req_i) begin
-            addr_q <= addr_i[$clog2(RomSize)-1+3:3];
+            addr_q <= addr_i[$clog2(RomSize)-1+2:2];
         end
     end
 

@@ -2,7 +2,7 @@
 
 `AXI_TYPEDEF_ALL(axi_32,
                 logic [31:0]    ,
-                logic           ,
+                logic [1:0]     ,
                 logic [31:0]    ,
                 logic [3:0]     ,
                 logic           )
@@ -11,7 +11,8 @@ module obi_axi_adapter #(
     parameter type axi_req_t    = axi_32_req_t,
     parameter type axi_resp_t   = axi_32_resp_t,
     parameter DATA_WIDTH        = 32,
-    parameter ADDR_WIDTH        = 32
+    parameter ADDR_WIDTH        = 32,
+    parameter ID_WIDTH          = 2
 )(
     input   logic                       obi_req_i,
     output  logic                       obi_gnt_o,
@@ -22,7 +23,8 @@ module obi_axi_adapter #(
     input   logic   [DATA_WIDTH-1:0]    obi_wdata_i,
     output  logic   [DATA_WIDTH-1:0]    obi_rdata_o,
     output  axi_req_t                   axi_req_o,
-    input   axi_resp_t                  axi_resp_i
+    input   axi_resp_t                  axi_resp_i,
+    input   logic   [ID_WIDTH-1:0]      axi_id_i
 );
     logic [2:0] a_size;
     
@@ -57,7 +59,7 @@ module obi_axi_adapter #(
     end
 
     assign axi_req_o.aw_valid   = obi_req_i & obi_we_i;
-    assign axi_req_o.aw.id      = '0;
+    assign axi_req_o.aw.id      = axi_id_i;
     assign axi_req_o.aw.addr    = obi_addr_i;
     assign axi_req_o.aw.len     = '0;
     assign axi_req_o.aw.size    = a_size;
@@ -79,7 +81,7 @@ module obi_axi_adapter #(
     assign axi_req_o.b_ready    = 1'b1;
 
     assign axi_req_o.ar_valid   = obi_req_i & ~obi_we_i;
-    assign axi_req_o.ar.id      = '0;
+    assign axi_req_o.ar.id      = axi_id_i;
     assign axi_req_o.ar.addr    = obi_addr_i;
     assign axi_req_o.ar.len     = '0;
     assign axi_req_o.ar.size    = a_size;

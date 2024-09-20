@@ -9,14 +9,14 @@ module cv32e40p_xilinx (
     AXI_BUS #(
         .AXI_ADDR_WIDTH ( 32    ),
         .AXI_DATA_WIDTH ( 32    ),
-        .AXI_ID_WIDTH   ( 1     ),
+        .AXI_ID_WIDTH   ( 2     ),
         .AXI_USER_WIDTH ( 1     )
     ) slave[1:0]();
 
     AXI_BUS #(
         .AXI_ADDR_WIDTH ( 32    ),
         .AXI_DATA_WIDTH ( 32    ),
-        .AXI_ID_WIDTH   ( 1     ),
+        .AXI_ID_WIDTH   ( 2     ),
         .AXI_USER_WIDTH ( 1     )
     ) master[1:0]();
     
@@ -77,6 +77,7 @@ module cv32e40p_xilinx (
     logic [31:0]    data_addr;
     logic [31:0]    data_wdata;
     logic [31:0]    data_rdata;
+    logic           data_valid;
 
     cv32e40p_top #(
         .COREV_PULP(0),
@@ -103,7 +104,7 @@ module cv32e40p_xilinx (
         .instr_rdata_i          (instr_rdata    ),
         .data_req_o             (data_req       ),
         .data_gnt_i             (data_gnt       ),
-        .data_rvalid_i          (data_rvalid    ),
+        .data_rvalid_i          (data_valid     ),//data_rvalid process both rvalid&wvalid
         .data_we_o              (data_we        ),
         .data_be_o              (data_be        ),
         .data_addr_o            (data_addr      ),
@@ -122,7 +123,7 @@ module cv32e40p_xilinx (
 
     `AXI_TYPEDEF_ALL(axi        ,
                 logic [31:0]    ,
-                logic           ,
+                logic [1:0]     ,
                 logic [31:0]    ,
                 logic [3:0]     ,
                 logic           )
@@ -137,7 +138,8 @@ module cv32e40p_xilinx (
         .axi_req_t  (axi_req_t  ),
         .axi_resp_t (axi_resp_t ),
         .DATA_WIDTH (32         ),
-        .ADDR_WIDTH (32         )
+        .ADDR_WIDTH (32         ),
+        .ID_WIDTH   (2          )
     ) i_obi_axi_adapter_instr (
         .obi_req_i      (instr_req      ),
         .obi_gnt_o      (instr_gnt      ),
@@ -148,7 +150,8 @@ module cv32e40p_xilinx (
         .obi_wdata_i    ('0             ),
         .obi_rdata_o    (instr_rdata    ),
         .axi_req_o      (instr_axi_req  ),
-        .axi_resp_i     (instr_axi_resp )
+        .axi_resp_i     (instr_axi_resp ),
+        .axi_id_i       (2'b01          )
     );
 
     axi_req_t   data_axi_req;
@@ -157,11 +160,14 @@ module cv32e40p_xilinx (
     `AXI_ASSIGN_FROM_REQ(slave[1],data_axi_req)
     `AXI_ASSIGN_TO_RESP(data_axi_resp,slave[1])
 
+    assign data_valid = data_rvalid | data_axi_resp.b_valid;
+
     obi_axi_adapter #(
         .axi_req_t  (axi_req_t  ),
         .axi_resp_t (axi_resp_t ),
         .DATA_WIDTH (32         ),
-        .ADDR_WIDTH (32         )
+        .ADDR_WIDTH (32         ),
+        .ID_WIDTH   (2           )
     ) i_obi_axi_adapter_data (
         .obi_req_i      (data_req      ),
         .obi_gnt_o      (data_gnt      ),
@@ -172,7 +178,8 @@ module cv32e40p_xilinx (
         .obi_wdata_i    (data_wdata    ),
         .obi_rdata_o    (data_rdata    ),
         .axi_req_o      (data_axi_req  ),
-        .axi_resp_i     (data_axi_resp )
+        .axi_resp_i     (data_axi_resp ),
+        .axi_id_i       (2'b10          )
     );
 
     logic           rom_req;
@@ -183,12 +190,12 @@ module cv32e40p_xilinx (
     bootrom i_bootrom (
         .clk_i   ( clk_i            ),
         .req_i   ( rom_req          ),
-        .addr_i  ( rom_addr         ),
+        .addr_i  ( rom_addr[15:0]   ),
         .rdata_o ( rom_rdata        )
     );
 
     axi2mem #(
-        .AXI_ID_WIDTH   ( 1     ),
+        .AXI_ID_WIDTH   ( 2     ),
         .AXI_ADDR_WIDTH ( 32    ),
         .AXI_DATA_WIDTH ( 32    ),
         .AXI_USER_WIDTH ( 1     )
@@ -221,7 +228,7 @@ module cv32e40p_xilinx (
         .rst_ni		( rst_ni            ),
         .req_i		( sram_req		    ),
         .we_i	    ( sram_we		    ),
-        .addr_i		( sram_addr[15:6]   ),
+        .addr_i		( sram_addr[11:2]   ),
         .wuser_i	( '0		        ),
         .wdata_i	( sram_wdata		),
         .be_i		( sram_be		    ),
@@ -230,7 +237,7 @@ module cv32e40p_xilinx (
     );
 
     axi2mem #(
-        .AXI_ID_WIDTH   ( 1     ),
+        .AXI_ID_WIDTH   ( 2     ),
         .AXI_ADDR_WIDTH ( 32    ),
         .AXI_DATA_WIDTH ( 32    ),
         .AXI_USER_WIDTH ( 1     )
@@ -243,6 +250,6 @@ module cv32e40p_xilinx (
         .addr_o ( sram_addr         ),
         .be_o   ( sram_be           ),
         .data_o ( sram_wdata        ),
-        .data_i ( rom_rdata         )
+        .data_i ( sram_rdata        )
     );
 endmodule
