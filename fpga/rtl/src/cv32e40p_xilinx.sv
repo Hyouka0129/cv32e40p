@@ -134,24 +134,34 @@ module cv32e40p_xilinx (
     `AXI_ASSIGN_FROM_REQ(slave[0],instr_axi_req)
     `AXI_ASSIGN_TO_RESP(instr_axi_resp,slave[0])
 
-    obi_axi_adapter #(
-        .axi_req_t  (axi_req_t  ),
-        .axi_resp_t (axi_resp_t ),
-        .DATA_WIDTH (32         ),
-        .ADDR_WIDTH (32         ),
-        .ID_WIDTH   (2          )
-    ) i_obi_axi_adapter_instr (
-        .obi_req_i      (instr_req      ),
-        .obi_gnt_o      (instr_gnt      ),
-        .obi_rvalid_o   (instr_rvalid   ),
-        .obi_we_i       (1'b0           ),
-        .obi_be_i       (4'b1111        ),
-        .obi_addr_i     (instr_addr     ),
-        .obi_wdata_i    ('0             ),
-        .obi_rdata_o    (instr_rdata    ),
-        .axi_req_o      (instr_axi_req  ),
-        .axi_resp_i     (instr_axi_resp ),
-        .axi_id_i       (2'b01          )
+    axi_adapter #(
+        .ADDR_WIDTH         (32         ),
+        .DATA_WIDTH         (32         ),
+        .AXI_DATA_WIDTH     (32         ),
+        .AXI_ID_WIDTH       (2          ),
+        .MAX_OUTSTANDING_AW (7          ),
+        .axi_req_t          (axi_req_t  ),
+        .axi_rsp_t          (axi_resp_t )
+    ) i_axi_adapter_instr (
+        .clk_i                 ( clk_i          ),
+        .rst_ni                ( rst_ni        ),
+        .req_i                 ( instr_req      ),
+        .type_i                ( 1'b0           ),
+        .amo_i                 ( 4'b0000        ),
+        .gnt_o                 ( instr_gnt      ),
+        .addr_i                ( instr_addr     ),
+        .we_i                  ( 1'b0           ),
+        .wdata_i               ( '0             ),
+        .be_i                  ( 4'b1111        ),
+        .size_i                ( 2'b10          ),
+        .id_i                  ( 2'b01          ),
+        .valid_o               ( instr_rvalid   ),
+        .rdata_o               ( instr_rdata    ),
+        .id_o                  (                ),
+        .critical_word_o       (                ),
+        .critical_word_valid_o (                ),
+        .axi_req_o             ( instr_axi_req  ),
+        .axi_resp_i            ( instr_axi_resp )
     );
 
     axi_req_t   data_axi_req;
@@ -162,24 +172,34 @@ module cv32e40p_xilinx (
 
     assign data_valid = data_rvalid | data_axi_resp.b_valid;
 
-    obi_axi_adapter #(
-        .axi_req_t  (axi_req_t  ),
-        .axi_resp_t (axi_resp_t ),
-        .DATA_WIDTH (32         ),
-        .ADDR_WIDTH (32         ),
-        .ID_WIDTH   (2           )
-    ) i_obi_axi_adapter_data (
-        .obi_req_i      (data_req      ),
-        .obi_gnt_o      (data_gnt      ),
-        .obi_rvalid_o   (data_rvalid   ),
-        .obi_we_i       (data_we       ),
-        .obi_be_i       (data_be       ),
-        .obi_addr_i     (data_addr     ),
-        .obi_wdata_i    (data_wdata    ),
-        .obi_rdata_o    (data_rdata    ),
-        .axi_req_o      (data_axi_req  ),
-        .axi_resp_i     (data_axi_resp ),
-        .axi_id_i       (2'b10          )
+    axi_adapter #(
+        .ADDR_WIDTH         (32         ),
+        .DATA_WIDTH         (32         ),
+        .AXI_DATA_WIDTH     (32         ),
+        .AXI_ID_WIDTH       (2          ),
+        .MAX_OUTSTANDING_AW (7          ),
+        .axi_req_t          (axi_req_t  ),
+        .axi_rsp_t          (axi_resp_t )
+    ) i_axi_adapter_data (
+        .clk_i                 ( clk_i          ),
+        .rst_ni                ( rst_ni         ),
+        .req_i                 ( data_req       ),
+        .type_i                ( 1'b0           ),
+        .amo_i                 ( 4'b0000        ),
+        .gnt_o                 ( data_gnt       ),
+        .addr_i                ( data_addr      ),
+        .we_i                  ( data_we        ),
+        .wdata_i               ( data_wdata     ),
+        .be_i                  ( data_be        ),
+        .size_i                ( 2'b10          ),
+        .id_i                  ( 2'b10          ),
+        .valid_o               ( data_rvalid    ),
+        .rdata_o               ( data_rdata     ),
+        .id_o                  (                ),
+        .critical_word_o       (                ),
+        .critical_word_valid_o (                ),
+        .axi_req_o             ( data_axi_req   ),
+        .axi_resp_i            ( data_axi_resp  )
     );
 
     logic           rom_req;

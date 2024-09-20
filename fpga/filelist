@@ -26,7 +26,6 @@
 /home/hyouka/project/2025tapeout/cv32e40p/rtl/cv32e40p_core.sv
 /home/hyouka/project/2025tapeout/cv32e40p/rtl/cv32e40p_top.sv
 /home/hyouka/project/2025tapeout/cv32e40p/fpga/rtl/src/axi_pkg.sv
-/home/hyouka/project/2025tapeout/cv32e40p/fpga/rtl/src/obi_axi_adapter.sv
 /home/hyouka/project/2025tapeout/cv32e40p/fpga/rtl/src/bootrom.sv
 /home/hyouka/project/2025tapeout/cv32e40p/fpga/rtl/src/axi2mem.sv
 /home/hyouka/project/2025tapeout/cv32e40p/fpga/rtl/src/tc_sram_wrapper.sv
@@ -50,6 +49,7 @@
 /home/hyouka/project/2025tapeout/cv32e40p/fpga/rtl/src/axi_id_prepend.sv
 /home/hyouka/project/2025tapeout/cv32e40p/fpga/rtl/src/axi_mux.sv
 /home/hyouka/project/2025tapeout/cv32e40p/fpga/rtl/src/axi_xbar.sv
+/home/hyouka/project/2025tapeout/cv32e40p/fpga/rtl/src/axi_adapter.sv
 /home/hyouka/project/2025tapeout/cv32e40p/fpga/rtl/src/cv32e40p_xilinx.sv
 /home/hyouka/project/2025tapeout/cv32e40p/fpga/tb/cv32e40p_xilinx_tb.sv
 
