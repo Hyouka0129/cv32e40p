@@ -4,6 +4,8 @@
 This repo is forked from [CV32E40P](https://github.com/openhwgroup/cv32e40p).
 
 To enable FPGA verification, we integrate AXI adapter and debug interface in this repo.
+
+AXI adapter completed.
 # OpenHW Group CORE-V CV32E40P RISC-V IP
 
 CV32E40P is a small and efficient, 32-bit, in-order RISC-V core with a 4-stage pipeline that implements
