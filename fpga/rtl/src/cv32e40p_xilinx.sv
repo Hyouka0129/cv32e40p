@@ -23,11 +23,12 @@ module cv32e40p_xilinx (
         .AXI_DATA_WIDTH ( 32    ),
         .AXI_ID_WIDTH   ( 2     ),
         .AXI_USER_WIDTH ( 1     )
-    ) master[1:0]();
+    ) master[2:0]();
+
     
     localparam axi_pkg::xbar_cfg_t AXI_XBAR_CFG = '{
         NoSlvPorts:         3,
-        NoMstPorts:         2,
+        NoMstPorts:         3,
         MaxMstTrans:        1, // Probably requires update
         MaxSlvTrans:        1, // Probably requires update
         FallThrough:        1'b0,
@@ -259,6 +260,23 @@ module cv32e40p_xilinx (
     logic           dm_master_r_valid;
     logic [31:0]    dm_master_r_rdata;
 
+    axi2mem #(
+        .AXI_ID_WIDTH   ( 2    ),
+        .AXI_ADDR_WIDTH ( 32        ),
+        .AXI_DATA_WIDTH ( 32        ),
+        .AXI_USER_WIDTH ( 1        )
+    ) i_dm_axi2mem (
+        .clk_i      ( clk_i                       ),
+        .rst_ni     ( rst_ni                     ),
+        .slave      ( master[2]           ),
+        .req_o      ( dm_slave_req              ),
+        .we_o       ( dm_slave_we               ),
+        .addr_o     ( dm_slave_addr             ),
+        .be_o       ( dm_slave_be               ),
+        .data_o     ( dm_slave_wdata            ),
+        .data_i     ( dm_slave_rdata            )
+    );
+
     dm_top #(
         .NrHarts          ( 1       ),
         .BusWidth         ( 32      ),
@@ -295,6 +313,7 @@ module cv32e40p_xilinx (
         .dmi_resp_o       ( debug_resp          )
     );
 
+
     axi_req_t   dm_axi_m_req;
     axi_resp_t  dm_axi_m_resp;
 
@@ -307,25 +326,25 @@ module cv32e40p_xilinx (
         .axi_req_t          (axi_req_t  ),
         .axi_rsp_t          (axi_resp_t )
     ) i_axi_adapter_dm (
-        .clk_i                 ( clk_i          ),
-        .rst_ni                ( rst_ni         ),
-        .req_i                 ( dm_master_req       ),
-        .type_i                ( 1'b0           ),
-        .amo_i                 ( 4'b0000        ),
-        .gnt_o                 ( dm_master_gnt       ),
+        .clk_i                 ( clk_i              ),
+        .rst_ni                ( rst_ni             ),
+        .req_i                 ( dm_master_req      ),
+        .type_i                ( 1'b0               ),
+        .amo_i                 ( 4'b0000            ),
+        .gnt_o                 ( dm_master_gnt      ),
         .addr_i                ( dm_master_add      ),
-        .we_i                  ( dm_master_we        ),
-        .wdata_i               ( dm_master_wdata     ),
-        .be_i                  ( dm_master_be        ),
-        .size_i                ( 2'b10          ),
-        .id_i                  ( '0          ),
-        .valid_o               ( dm_master_r_valid    ),
-        .rdata_o               ( dm_master_r_rdata     ),
-        .id_o                  (                ),
-        .critical_word_o       (                ),
-        .critical_word_valid_o (                ),
-        .axi_req_o             ( dm_axi_m_req   ),
-        .axi_resp_i            ( dm_axi_m_resp  )
+        .we_i                  ( dm_master_we       ),
+        .wdata_i               ( dm_master_wdata    ),
+        .be_i                  ( dm_master_be       ),
+        .size_i                ( 2'b10              ),
+        .id_i                  ( '0                 ),
+        .valid_o               ( dm_master_r_valid  ),
+        .rdata_o               ( dm_master_r_rdata  ),
+        .id_o                  (                    ),
+        .critical_word_o       (                    ),
+        .critical_word_valid_o (                    ),
+        .axi_req_o             ( dm_axi_m_req       ),
+        .axi_resp_i            ( dm_axi_m_resp      )
     );
 
     `AXI_ASSIGN_FROM_REQ(slave[2], dm_axi_m_req)
