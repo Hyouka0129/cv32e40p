@@ -2,8 +2,13 @@
 `include "axi/assign.svh"
 
 module cv32e40p_xilinx (
-    input   clk_i,
-    input   rst_ni
+    input   logic   clk_i,
+    input   logic   rst_ni,
+    input   logic   tck_i,
+    input   logic   tms_i,
+    input   logic   td_i,
+    output  logic   td_o,
+    input   logic   trst_ni
 );
     
     AXI_BUS #(
@@ -11,7 +16,7 @@ module cv32e40p_xilinx (
         .AXI_DATA_WIDTH ( 32    ),
         .AXI_ID_WIDTH   ( 2     ),
         .AXI_USER_WIDTH ( 1     )
-    ) slave[1:0]();
+    ) slave[2:0]();
 
     AXI_BUS #(
         .AXI_ADDR_WIDTH ( 32    ),
@@ -21,7 +26,7 @@ module cv32e40p_xilinx (
     ) master[1:0]();
     
     localparam axi_pkg::xbar_cfg_t AXI_XBAR_CFG = '{
-        NoSlvPorts:         2,
+        NoSlvPorts:         3,
         NoMstPorts:         2,
         MaxMstTrans:        1, // Probably requires update
         MaxSlvTrans:        1, // Probably requires update
@@ -78,6 +83,13 @@ module cv32e40p_xilinx (
     logic [31:0]    data_wdata;
     logic [31:0]    data_rdata;
     logic           data_valid;
+    logic           debug_req_valid;
+    logic           debug_req_ready;
+    dm::dmi_req_t   debug_req;
+    logic           debug_resp_valid;
+    logic           debug_resp_ready;
+    dm::dmi_resp_t  debug_resp;
+    logic           debug_req_irq;
 
     cv32e40p_top #(
         .COREV_PULP(0),
@@ -113,7 +125,7 @@ module cv32e40p_xilinx (
         .irq_i                  (32'b0          ),
         .irq_ack_o              (               ),
         .irq_id_o               (               ),
-        .debug_req_i            (1'b0           ),
+        .debug_req_i            (debug_req_irq  ),
         .debug_havereset_o      (               ),
         .debug_running_o        (               ),
         .debug_halted_o         (               ),
@@ -202,11 +214,127 @@ module cv32e40p_xilinx (
         .axi_resp_i            ( data_axi_resp  )
     );
 
+    dmi_jtag i_dmi_jtag (
+        .clk_i                ( clk_i               ),
+        .rst_ni               ( rst_ni              ),
+        .dmi_rst_no           (                     ), // keep open
+        .testmode_i           ( 1'b0                ),
+        .dmi_req_valid_o      ( debug_req_valid     ),
+        .dmi_req_ready_i      ( debug_req_ready     ),
+        .dmi_req_o            ( debug_req           ),
+        .dmi_resp_valid_i     ( debug_resp_valid    ),
+        .dmi_resp_ready_o     ( debug_resp_ready    ),
+        .dmi_resp_i           ( debug_resp          ),
+        .tck_i                ( tck_i               ),
+        .tms_i                ( tms_i               ),
+        .trst_ni              ( trst_ni             ),
+        .td_i                 ( td_i                ),
+        .td_o                 ( td_o                ),
+        .tdo_oe_o             (                     )
+    );
+
+    dm::hartinfo_t hartinfo;
+    assign hartinfo = '{
+        zero1       : '0,
+        nscratch    : 2,
+        zero0       : '0,
+        dataaccess  : 1'b1,
+        datasize    : dm::DataCount,
+        dataaddr    : dm::DataAddr
+    };
+
+    logic           dm_slave_req;
+    logic           dm_slave_we;
+    logic [31:0]    dm_slave_addr;
+    logic [3:0]     dm_slave_be;
+    logic [31:0]    dm_slave_wdata;
+    logic [31:0]    dm_slave_rdata;
+
+    logic           dm_master_req;
+    logic [31:0]    dm_master_add;
+    logic           dm_master_we;
+    logic [31:0]    dm_master_wdata;
+    logic [3:0]     dm_master_be;
+    logic           dm_master_gnt;
+    logic           dm_master_r_valid;
+    logic [31:0]    dm_master_r_rdata;
+
+    dm_top #(
+        .NrHarts          ( 1       ),
+        .BusWidth         ( 32      ),
+        .SelectableHarts  ( 1'b1    )
+    ) i_dm_top (
+        .clk_i            ( clk_i               ),
+        .rst_ni           ( rst_ni              ), // PoR
+        .testmode_i       ( 1'b0                ),
+        .ndmreset_o       (                     ),
+        .dmactive_o       (                     ), // active debug session
+        .debug_req_o      ( debug_req_irq       ),
+        .unavailable_i    ( '0                  ),
+        .hartinfo_i       ( hartinfo            ),
+        .slave_req_i      ( dm_slave_req        ),
+        .slave_we_i       ( dm_slave_we         ),
+        .slave_addr_i     ( dm_slave_addr       ),
+        .slave_be_i       ( dm_slave_be         ),
+        .slave_wdata_i    ( dm_slave_wdata      ),
+        .slave_rdata_o    ( dm_slave_rdata      ),
+        .master_req_o     ( dm_master_req       ),
+        .master_add_o     ( dm_master_add       ),
+        .master_we_o      ( dm_master_we        ),
+        .master_wdata_o   ( dm_master_wdata     ),
+        .master_be_o      ( dm_master_be        ),
+        .master_gnt_i     ( dm_master_gnt       ),
+        .master_r_valid_i ( dm_master_r_valid   ),
+        .master_r_rdata_i ( dm_master_r_rdata   ),
+        .dmi_rst_ni       ( rst_ni              ),
+        .dmi_req_valid_i  ( debug_req_valid     ),
+        .dmi_req_ready_o  ( debug_req_ready     ),
+        .dmi_req_i        ( debug_req           ),
+        .dmi_resp_valid_o ( debug_resp_valid    ),
+        .dmi_resp_ready_i ( debug_resp_ready    ),
+        .dmi_resp_o       ( debug_resp          )
+    );
+
+    axi_req_t   dm_axi_m_req;
+    axi_resp_t  dm_axi_m_resp;
+
+    axi_adapter #(
+        .ADDR_WIDTH         (32         ),
+        .DATA_WIDTH         (32         ),
+        .AXI_DATA_WIDTH     (32         ),
+        .AXI_ID_WIDTH       (2          ),
+        .MAX_OUTSTANDING_AW (7          ),
+        .axi_req_t          (axi_req_t  ),
+        .axi_rsp_t          (axi_resp_t )
+    ) i_axi_adapter_dm (
+        .clk_i                 ( clk_i          ),
+        .rst_ni                ( rst_ni         ),
+        .req_i                 ( dm_master_req       ),
+        .type_i                ( 1'b0           ),
+        .amo_i                 ( 4'b0000        ),
+        .gnt_o                 ( dm_master_gnt       ),
+        .addr_i                ( dm_master_add      ),
+        .we_i                  ( dm_master_we        ),
+        .wdata_i               ( dm_master_wdata     ),
+        .be_i                  ( dm_master_be        ),
+        .size_i                ( 2'b10          ),
+        .id_i                  ( '0          ),
+        .valid_o               ( dm_master_r_valid    ),
+        .rdata_o               ( dm_master_r_rdata     ),
+        .id_o                  (                ),
+        .critical_word_o       (                ),
+        .critical_word_valid_o (                ),
+        .axi_req_o             ( dm_axi_m_req   ),
+        .axi_resp_i            ( dm_axi_m_resp  )
+    );
+
+    `AXI_ASSIGN_FROM_REQ(slave[2], dm_axi_m_req)
+    `AXI_ASSIGN_TO_RESP(dm_axi_m_resp, slave[2])
+
     logic           rom_req;
     logic [31:0]    rom_addr;
     logic [31:0]    rom_rdata;
     
-
     bootrom i_bootrom (
         .clk_i   ( clk_i            ),
         .req_i   ( rom_req          ),

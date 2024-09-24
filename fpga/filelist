@@ -50,6 +50,19 @@
 /home/hyouka/project/2025tapeout/cv32e40p/fpga/rtl/src/axi_mux.sv
 /home/hyouka/project/2025tapeout/cv32e40p/fpga/rtl/src/axi_xbar.sv
 /home/hyouka/project/2025tapeout/cv32e40p/fpga/rtl/src/axi_adapter.sv
+/home/hyouka/project/2025tapeout/cv32e40p/fpga/rtl/src/dm_pkg.sv
+/home/hyouka/project/2025tapeout/cv32e40p/fpga/rtl/src/pulp_clk_cells.sv
+/home/hyouka/project/2025tapeout/cv32e40p/fpga/rtl/src/tc_clk.sv
+/home/hyouka/project/2025tapeout/cv32e40p/fpga/rtl/src/cluster_clk_cells.sv
+/home/hyouka/project/2025tapeout/cv32e40p/fpga/rtl/src/dmi_jtag_tap.sv
+/home/hyouka/project/2025tapeout/cv32e40p/fpga/rtl/src/cdc_2phase.sv
+/home/hyouka/project/2025tapeout/cv32e40p/fpga/rtl/src/dmi_cdc.sv
+/home/hyouka/project/2025tapeout/cv32e40p/fpga/rtl/src/dmi_jtag.sv
+/home/hyouka/project/2025tapeout/cv32e40p/fpga/rtl/src/dm_csrs.sv
+/home/hyouka/project/2025tapeout/cv32e40p/fpga/rtl/src/dm_sba.sv
+/home/hyouka/project/2025tapeout/cv32e40p/fpga/rtl/src/debug_rom.sv
+/home/hyouka/project/2025tapeout/cv32e40p/fpga/rtl/src/dm_mem.sv
+/home/hyouka/project/2025tapeout/cv32e40p/fpga/rtl/src/dm_top.sv
 /home/hyouka/project/2025tapeout/cv32e40p/fpga/rtl/src/cv32e40p_xilinx.sv
 /home/hyouka/project/2025tapeout/cv32e40p/fpga/tb/cv32e40p_xilinx_tb.sv
 
