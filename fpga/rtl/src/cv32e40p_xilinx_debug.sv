@@ -1,7 +1,7 @@
 `include "axi/typedef.svh"
 `include "axi/assign.svh"
 
-module cv32e40p_xilinx (
+module cv32e40p_xilinx_debug (
     input   logic   clk_i,
     input   logic   rst_ni,
     input   logic   tck_i,
@@ -9,7 +9,8 @@ module cv32e40p_xilinx (
     input   logic   td_i,
     output  logic   td_o,
     output  logic   clk_led,
-    output  logic   tck_led
+    output  logic   tck_led,
+    input   logic   debug_req_i
 );
 
     logic ndmreset;
@@ -140,7 +141,7 @@ module cv32e40p_xilinx (
         .irq_i                  (32'b0          ),
         .irq_ack_o              (               ),
         .irq_id_o               (               ),
-        .debug_req_i            (debug_req_irq  ),
+        .debug_req_i            (debug_req_i    ),
         .debug_havereset_o      (               ),
         .debug_running_o        (               ),
         .debug_halted_o         (               ),

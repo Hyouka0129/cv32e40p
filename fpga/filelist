@@ -63,6 +63,10 @@
 /home/hyouka/project/2025tapeout/cv32e40p/fpga/rtl/src/debug_rom.sv
 /home/hyouka/project/2025tapeout/cv32e40p/fpga/rtl/src/dm_mem.sv
 /home/hyouka/project/2025tapeout/cv32e40p/fpga/rtl/src/dm_top.sv
+/home/hyouka/project/2025tapeout/cv32e40p/fpga/rtl/src/rstgen_bypass.sv
+/home/hyouka/project/2025tapeout/cv32e40p/fpga/rtl/src/rstgen.sv
 /home/hyouka/project/2025tapeout/cv32e40p/fpga/rtl/src/cv32e40p_xilinx.sv
 /home/hyouka/project/2025tapeout/cv32e40p/fpga/tb/cv32e40p_xilinx_tb.sv
+/home/hyouka/project/2025tapeout/cv32e40p/fpga/rtl/src/cv32e40p_xilinx_debug.sv
+/home/hyouka/project/2025tapeout/cv32e40p/fpga/tb/cv32e40p_xilinx_debug_tb.sv
 
